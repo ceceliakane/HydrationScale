@@ -8,7 +8,6 @@
 
 #define TRIG_PIN         9
 #define ECHO_PIN         10
-#define SCALE_ENABLE_PIN 7
 
 // ================================================================
 // DATA TYPES
@@ -44,7 +43,8 @@ float readBMPPressure_hPa();
 // ================================================================
 // SHT31 (I2C)  -- humidity (+ its own temp)
 // ================================================================
-float readHumidityRH();        // %RH (raw; apply your CP2 calibration here if desired)
+float readHumidityRH();        // %RH, CP2 transfer function applied (see SHT31_APPLY_CAL)
+float readHumidityRawRH();     // %RH straight from the sensor
 float readSHT31TempC();
 
 // ================================================================
