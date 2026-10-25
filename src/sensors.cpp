@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "sensors.h"
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
