@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "iot.h"
 #include <WiFiS3.h>
 #include "ThingSpeak.h"
