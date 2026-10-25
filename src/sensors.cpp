@@ -1,5 +1,5 @@
-#include <Arduino.h>
 #include "sensors.h"
+#include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_SHT31.h>
@@ -105,9 +105,27 @@ float readBMPPressure_hPa() {
 // ================================================================
 // SHT31
 // ================================================================
+// CP2 transfer function: SHT31 = SHT31_SLOPE * RH_ref + SHT31_INTERCEPT
+// (fit against the Walmart hygrometer over 69-92 %RH). Inverting it converts an
+// SHT31 reading back to the reference scale:  RH_ref = (SHT31 - intercept) / slope
+#define SHT31_APPLY_CAL  1            // 0 = return the raw sensor value
+static const float SHT31_SLOPE     = 1.32f;
+static const float SHT31_INTERCEPT = -33.2f;
+
 float readHumidityRH() {
   if (!shtOk) return NAN;
-  return sht31.readHumidity();     // add CP2 calibration here if you want it applied
+  float raw = sht31.readHumidity();
+  if (isnan(raw)) return NAN;
+#if SHT31_APPLY_CAL
+  float rh = (raw - SHT31_INTERCEPT) / SHT31_SLOPE;
+  return constrain(rh, 0.0f, 100.0f);
+#else
+  return raw;
+#endif
+}
+
+float readHumidityRawRH() {          // uncorrected value, handy for logging/comparison
+  return shtOk ? sht31.readHumidity() : NAN;
 }
 
 float readSHT31TempC() {
