@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "captouch.h"
+#include "capTouch.h"
 #include <math.h>
 
 /*
