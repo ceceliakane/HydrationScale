@@ -1,12 +1,13 @@
+#include <Arduino.h>
 // ================================================================
 // Hydration Scale - main
 // Every sensor is a function in sensors.cpp; this file only calls them.
 // ================================================================
-#include <Arduino.h>
 #include <WiFiS3.h>
 #include "sensors.h"
 #include "hydration.h"
 #include "oled.h"
+#include "captouch.h"
 #include "iot.h"
 
 // ---- USER SETTINGS ----
@@ -61,6 +62,9 @@ void setup() {
   Serial.begin(9600);
   sensorsBegin();
   oledBegin();
+  oledMessage("Calibrating touch", "Hands OFF the pad");
+  capTouchBegin();
+  oledWake();   // show the dashboard for the first 15 s
   hydrationBegin(BODY_WEIGHT_LB, EXERCISE_OZ);
   iotBegin();
   therm = readThermistor();
@@ -70,6 +74,9 @@ void setup() {
 
 void loop() {
   presenceUpdate();                    // non-blocking, runs its own 60 ms timer
+
+  if (readTouch()) oledWake();         // ~33 ms per call; a touch lights the OLED
+  if (Serial.available() && Serial.read() == 'c') capTouchRecalibrate();
   unsigned long now = millis();
 
   if (now - lastSense >= SENSE_INTERVAL_MS) {
@@ -78,7 +85,6 @@ void loop() {
     scale = readScale();               // valid only when a bottle is present and settled
     hydrationUpdate(envTempF, humidity, scale, isObjectPresent());
 
-    if (readTouch()) oledWake();
   }
 
   if (now - lastEnv >= ENV_INTERVAL_MS) {
