@@ -1,18 +1,11 @@
 #include <Arduino.h>
-
-// put function declarations here:
-int myFunction(int, int);
-
+#include <Wire.h>
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(9600); Wire.begin(); delay(1000);
+  for (uint8_t a = 1; a < 127; a++) {
+    Wire.beginTransmission(a);
+    if (Wire.endTransmission() == 0) { Serial.print("Found 0x"); Serial.println(a, HEX); }
+  }
+  Serial.println("Scan done");
 }
-
-void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
-}
+void loop() {}
