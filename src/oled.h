@@ -11,7 +11,7 @@
 
 // 0 = screen turns on only after oledWake() (a confirmed touch), then times out.
 // 1 = screen stays on (handy for debugging the display or the touch pad).
-#define OLED_ALWAYS_ON    0
+#define OLED_ALWAYS_ON    1
 
 bool oledBegin();
 void oledMessage(const char* line1, const char* line2);   // quick status text
