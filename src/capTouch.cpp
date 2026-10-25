@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "captouch.h"
 #include <math.h>
 
