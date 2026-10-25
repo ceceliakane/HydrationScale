@@ -62,8 +62,7 @@ bool sensorsBegin() {
 
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  pinMode(SCALE_ENABLE_PIN, OUTPUT);
-  digitalWrite(SCALE_ENABLE_PIN, LOW);
+  
 muxBegin();
 
   Wire.begin();
@@ -190,7 +189,6 @@ float readDistanceCm() {
 }
 
 static void onPresenceChanged(bool present) {
-  digitalWrite(SCALE_ENABLE_PIN, present ? HIGH : LOW);
   if (present) {
     presentSince = millis();
     weightFilterPrimed = false;   // restart the weight filter for each new placement
