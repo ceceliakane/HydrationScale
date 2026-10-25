@@ -9,7 +9,7 @@
 
 // Set to 1 once the mux is wired. With 0, each sensor is read directly
 // on its own pin (THERM_PIN / FSR_PIN) and no select line is driven.
-#define USE_MUX          0
+#define USE_MUX          1
 
 #define MUX_ADC_PIN      A0    // shared ADC input (mux output)
 #define MUX_SELECT_PIN   5     // D5
