@@ -61,3 +61,5 @@ dkms.conf
 # debug information files
 *.dwo
 >>>>>>> d0c79ac1f1534a574d9204e141a645616e3f03fa
+
+secrets.h
