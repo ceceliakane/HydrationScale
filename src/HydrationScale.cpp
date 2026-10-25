@@ -2,6 +2,7 @@
 // Hydration Scale - main
 // Every sensor is a function in sensors.cpp; this file only calls them.
 // ================================================================
+#include <Arduino.h>
 #include <WiFiS3.h>
 #include "sensors.h"
 #include "hydration.h"
