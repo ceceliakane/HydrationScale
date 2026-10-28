@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "hydration.h"
 #include <math.h>
 
@@ -12,7 +11,8 @@ static const float FLOZ_PER_WEIGHT_OZ  = 0.9586f;  // 1 oz of water by weight = 
 static const float STABLE_BAND_OZ      = 0.30f;    // readings within this count as "stable"
 static const int   STABLE_CYCLES       = 5;        // ...for this many consecutive updates
 static const float MIN_EVENT_OZ        = 1.0f;     // ignore changes smaller than FSR error
-static const float MAX_DRINK_OZ        = 20.0f;    // bigger drop = different bottle / spill, ignore
+static const float MAX_DRINK_OZ        = 20.0f;
+static const float MIN_BOTTLE_OZ       = 1.5f;     // below this the bottle counts as lifted off the scale    // bigger drop = different bottle / spill, ignore
 
 // ---------------- State ----------------
 static float bodyLb = 140.0f, exerciseOz = 0.0f;
@@ -20,7 +20,7 @@ static float goalOz = 0, intakeOz = 0, hi = 0, mult = 1.0f, lastDrinkOz = 0;
 
 static float lastStable = 0;  static bool haveStable = false;
 static float prevOz = 0;      static int  stableCount = 0;
-static bool  wasPresent = false, bottleAway = false;
+static bool  wasOnScale = false, bottleAway = false;
 static float refOz = 0;
 
 // ================================================================
@@ -70,16 +70,25 @@ void hydrationUpdate(float tempF, float rh, const ScaleReading& s, bool present)
   }
   goalOz = (bodyLb * FL_OZ_PER_LB) * mult + exerciseOz;
 
-  // ---- 2. Bottle removed? remember the last stable weight ----
-  if (wasPresent && !present) {
+  // ---- 2. Is the bottle actually ON the scale? ----
+  // Uses the FSR itself (weight above MIN_BOTTLE_OZ), not just the ultrasonic flag,
+  // so a lift is caught even if the HC-SR04 still sees the bottle nearby.
+  bool onScale = present && s.valid && s.weightOz > MIN_BOTTLE_OZ;
+
+  if (wasOnScale && !onScale) {                 // bottle lifted off
     stableCount = 0;
-    if (haveStable) { bottleAway = true; refOz = lastStable; }
+    if (haveStable) {
+      bottleAway = true;
+      refOz = lastStable;
+      Serial.print("Bottle lifted. Reference weight: ");
+      Serial.print(refOz, 2); Serial.println(" oz");
+    }
   }
-  wasPresent = present;
+  wasOnScale = onScale;
+
+  if (!onScale) { stableCount = 0; return; }
 
   // ---- 3. Track stability while the bottle is on the scale ----
-  if (!s.valid) { stableCount = 0; return; }
-
   if (fabsf(s.weightOz - prevOz) <= STABLE_BAND_OZ) stableCount++;
   else stableCount = 0;
   prevOz = s.weightOz;
@@ -90,12 +99,18 @@ void hydrationUpdate(float tempF, float rh, const ScaleReading& s, bool present)
     // Bottle just came back: compare against what it weighed when it left
     if (bottleAway) {
       float delta = refOz - now;                       // positive = water was drunk
+      Serial.print("Bottle returned. Was "); Serial.print(refOz, 2);
+      Serial.print(" oz, now "); Serial.print(now, 2);
+      Serial.print(" oz, change "); Serial.print(delta, 2); Serial.println(" oz");
+
       if (delta >= MIN_EVENT_OZ && delta <= MAX_DRINK_OZ) {
         lastDrinkOz = delta * FLOZ_PER_WEIGHT_OZ;
         intakeOz += lastDrinkOz;
         Serial.print("Drink detected: "); Serial.print(lastDrinkOz, 1); Serial.println(" fl oz");
       } else if (delta <= -MIN_EVENT_OZ) {
         Serial.println("Refill detected (weight increased) - no intake counted.");
+      } else {
+        Serial.println("Change too small (under threshold) - not counted.");
       }
       bottleAway = false;
     }
