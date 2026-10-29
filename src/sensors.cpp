@@ -1,5 +1,4 @@
 #include "sensors.h"
-#include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_SHT31.h>
@@ -51,6 +50,7 @@ static const unsigned long ECHO_TIMEOUT_US  = 30000UL;
 static const unsigned long SETTLE_MS        = 2000;
 static bool objectPresent = false;
 static uint8_t changeStreak = 0;
+static float lastDist = -1;
 static unsigned long lastPing = 0;
 static unsigned long presentSince = 0;
 
@@ -62,7 +62,8 @@ bool sensorsBegin() {
 
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  
+  pinMode(SCALE_ENABLE_PIN, OUTPUT);
+  digitalWrite(SCALE_ENABLE_PIN, LOW);
 muxBegin();
 
   Wire.begin();
@@ -189,6 +190,7 @@ float readDistanceCm() {
 }
 
 static void onPresenceChanged(bool present) {
+  digitalWrite(SCALE_ENABLE_PIN, present ? HIGH : LOW);
   if (present) {
     presentSince = millis();
     weightFilterPrimed = false;   // restart the weight filter for each new placement
@@ -204,6 +206,7 @@ bool presenceUpdate() {
   lastPing = now;
 
   float d = readDistanceCm();
+  lastDist = d;
   bool wantPresent = objectPresent;
 
   if (d < 0) {
@@ -227,6 +230,7 @@ bool presenceUpdate() {
 }
 
 bool isObjectPresent() { return objectPresent; }
+float lastDistanceCm() { return lastDist; }
 
 bool scaleReady() {
   return objectPresent && (millis() - presentSince >= SETTLE_MS);
