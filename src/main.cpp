@@ -31,7 +31,9 @@ const unsigned long OLED_INTERVAL_MS  = 500;
 const unsigned long DAY_CHECK_MS      = 60000;
 const unsigned long IOT_INTERVAL_MS   = 15000;   // ThingSpeak free tier
 
-unsigned long lastSense = 0, lastEnv = 0, lastOled = 0, lastDayCheck = 0, lastPost = 0;
+unsigned long lastSense = 0, lastEnv = 0, lastOled = 0, lastDayCheck = 0, lastPost = 0, lastDebug = 0;
+const unsigned long DEBUG_INTERVAL_MS = 1000;   // live serial status line
+bool prevPresent = false;
 long lastDay = -1;
 
 ThermistorReading therm;
@@ -60,6 +62,9 @@ void checkNewDay() {
 
 void setup() {
   Serial.begin(9600);
+  uint32_t t0 = millis();
+  while (!Serial && millis() - t0 < 3000) { }          // wait for the serial monitor
+  Serial.print("Build: "); Serial.print(__DATE__); Serial.print(" "); Serial.println(__TIME__);
   sensorsBegin();
   oledBegin();
   oledMessage("Calibrating touch", "Hands OFF the pad");
@@ -74,6 +79,10 @@ void setup() {
 
 void loop() {
   presenceUpdate();                    // non-blocking, runs its own 60 ms timer
+
+  // Light the screen whenever a bottle arrives or leaves
+  bool p = isObjectPresent();
+  if (p != prevPresent) { prevPresent = p; oledWake(); }
 
   if (readTouch()) oledWake();         // ~33 ms per call; a touch lights the OLED
   if (Serial.available() && Serial.read() == 'c') capTouchRecalibrate();
@@ -94,7 +103,16 @@ void loop() {
 
   if (now - lastOled >= OLED_INTERVAL_MS) {
     lastOled = now;
-    oledRender(hydrationGet(), envTempF, humidity, isObjectPresent());
+    oledRender(hydrationGet(), envTempF, humidity, isObjectPresent(), scaleReady(), scale.weightOz);
+  }
+
+  if (now - lastDebug >= DEBUG_INTERVAL_MS) {
+    lastDebug = now;
+    Serial.print("Dist "); Serial.print(lastDistanceCm(), 1); Serial.print(" cm | ");
+    if (!isObjectPresent())   Serial.println("no bottle");
+    else if (!scale.valid)    Serial.println("bottle present - settling");
+    else { Serial.print("bottle present | "); Serial.print(scale.weightOz, 2);
+           Serial.print(" oz | "); Serial.print(scale.vKalman, 3); Serial.println(" V"); }
   }
 
   if (now - lastDayCheck >= DAY_CHECK_MS) {
