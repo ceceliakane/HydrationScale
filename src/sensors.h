@@ -8,6 +8,7 @@
 
 #define TRIG_PIN         9
 #define ECHO_PIN         10
+#define SCALE_ENABLE_PIN 7
 
 // ================================================================
 // DATA TYPES
@@ -58,6 +59,7 @@ void  calibrateThermistorToBMP();     // recomputes the offset against the BMP28
 // HC-SR04 presence detection
 // ================================================================
 float readDistanceCm();               // -1 if no echo
+float lastDistanceCm();               // most recent distance seen by presenceUpdate() (cm, -1 = no echo)
 bool  presenceUpdate();               // non-blocking; call every loop. Returns objectPresent
 bool  isObjectPresent();
 bool  scaleReady();                   // present AND settled
