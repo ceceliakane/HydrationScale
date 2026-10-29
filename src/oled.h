@@ -16,4 +16,5 @@
 bool oledBegin();
 void oledMessage(const char* line1, const char* line2);   // quick status text
 void oledWake();      // call when a confirmed touch happens
-void oledRender(const HydrationState& h, float tempF, float rh, bool bottlePresent);
+void oledRender(const HydrationState& h, float tempF, float rh,
+                bool bottlePresent, bool scaleReady, float weightOz);
