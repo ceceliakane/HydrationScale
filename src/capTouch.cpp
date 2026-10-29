@@ -1,5 +1,4 @@
-#include <Arduino.h>
-#include "capTouch.h"
+#include "captouch.h"
 #include <math.h>
 
 /*
@@ -18,12 +17,12 @@ static const uint8_t PIN_DRIVE = 2;   // square wave out to R
 static const uint8_t PIN_CMP   = 3;   // comparator output in
 
 // ---------------- circuit values ----------------
-static const float R_OHMS     = 470e3f;
+static const float R_OHMS     = 2.0e6f;
 static const float F_HZ       = 300.0f;
 static const float VS_VOLTS   = 5.0f;
 static const float VREF_VOLTS = 1.57f;
 static const float LN_FACTOR  = logf(VS_VOLTS / (VS_VOLTS - VREF_VOLTS));
-static const float WEAKEST_PRESS_PF = 50.0f;
+static const float WEAKEST_PRESS_PF = 23.0f;
 
 static const float PRESS_DELTA_US = 0.5f * LN_FACTOR * R_OHMS * WEAKEST_PRESS_PF * 1e-12f * 1e6f;
 static const float NOMINAL_C_PF = 36.3f;
@@ -165,6 +164,17 @@ bool readTouch() {
   } else count = 0;
 
   digitalWrite(LED_BUILTIN, pressed ? HIGH : LOW);
+#if CAPTOUCH_DEBUG
+  static uint32_t lastDbg = 0;
+  if (millis() - lastDbg >= 1000) {
+    lastDbg = millis();
+    Serial.print(F("Touch td=")); Serial.print(avg, 2);
+    Serial.print(F(" us  baseline=")); Serial.print(baselineUs, 2);
+    Serial.print(F("  tthr=")); Serial.print(tthrUs, 2);
+    Serial.print(F("  press cycles=")); Serial.print(pressCycles);
+    Serial.print('/'); Serial.println(AVG_CYCLES);
+  }
+#endif
   return pressed;
 }
 
