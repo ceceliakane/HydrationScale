@@ -41,7 +41,8 @@ static bool shouldBeOn() {
 #endif
 }
 
-void oledRender(const HydrationState& h, float tempF, float rh, bool bottlePresent) {
+void oledRender(const HydrationState& h, float tempF, float rh,
+                bool bottlePresent, bool scaleReady, float weightOz) {
   bool wantOn = shouldBeOn();
   if (!wantOn) {
     if (physOn) { display.ssd1306_command(SSD1306_DISPLAYOFF); physOn = false; }
@@ -54,8 +55,6 @@ void oledRender(const HydrationState& h, float tempF, float rh, bool bottlePrese
 
   display.setCursor(0, 0);
   display.print("Goal: ");  display.print(h.goalOz, 0);  display.print(" oz");
-  display.setCursor(104, 0);
-  display.print(bottlePresent ? "[B]" : "");
 
   display.setCursor(0, 11);
   display.print("Drank: "); display.print(h.intakeOz, 1); display.print(" oz");
@@ -67,6 +66,12 @@ void oledRender(const HydrationState& h, float tempF, float rh, bool bottlePrese
 
   display.setCursor(0, 40);
   display.print((int)h.scorePct); display.print("% of goal");
+
+  // live bottle status (right side of this line)
+  display.setCursor(74, 40);
+  if (!bottlePresent)      display.print("no bottle");
+  else if (!scaleReady)    display.print("settling");
+  else { display.print(weightOz, 1); display.print(" oz"); }
 
   display.setCursor(0, 52);
   if (isnan(tempF) || isnan(rh)) {
