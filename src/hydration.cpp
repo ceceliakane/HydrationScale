@@ -8,7 +8,7 @@ static const float EXTRA_PER_F         = 0.015f;   // +1.5% per degF above HI_ST
 static const float EXTRA_CAP           = 0.50f;    // never more than +50%
 
 static const float FLOZ_PER_WEIGHT_OZ  = 0.9586f;  // 1 oz of water by weight = 0.9586 fl oz
-static const float STABLE_BAND_OZ      = 0.30f;    // readings within this count as "stable"
+static const float STABLE_BAND_OZ      = 0.50f;    // readings within this count as "stable"
 static const int   STABLE_CYCLES       = 5;        // ...for this many consecutive updates
 static const float MIN_EVENT_OZ        = 1.0f;     // ignore changes smaller than FSR error
 static const float MAX_DRINK_OZ        = 20.0f;
@@ -114,6 +114,9 @@ void hydrationUpdate(float tempF, float rh, const ScaleReading& s, bool present)
       }
       bottleAway = false;
     }
+    if (!haveStable) {
+      Serial.print("Stable weight recorded: "); Serial.print(now, 2); Serial.println(" oz");
+    }
     lastStable = now;
     haveStable = true;
   }
@@ -127,5 +130,9 @@ HydrationState hydrationGet() {
   h.heatIndexF    = hi;
   h.envMultiplier = mult;
   h.lastDrinkOz   = lastDrinkOz;
+  h.stableCount   = stableCount;
+  h.haveStable    = haveStable;
+  h.bottleAway    = bottleAway;
+  h.lastStableOz  = lastStable;
   return h;
 }
