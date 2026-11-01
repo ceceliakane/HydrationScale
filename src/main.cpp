@@ -34,6 +34,8 @@ const unsigned long IOT_INTERVAL_MS   = 15000;   // ThingSpeak free tier
 unsigned long lastSense = 0, lastEnv = 0, lastOled = 0, lastDayCheck = 0, lastPost = 0, lastDebug = 0;
 const unsigned long DEBUG_INTERVAL_MS = 1000;   // live serial status line
 bool prevPresent = false;
+bool prevTouch   = false;
+const bool WAKE_ON_BOTTLE = false;   // true = also switch the screen on when a bottle arrives/leaves
 long lastDay = -1;
 
 ThermistorReading therm;
@@ -69,7 +71,7 @@ void setup() {
   oledBegin();
   oledMessage("Calibrating touch", "Hands OFF the pad");
   capTouchBegin();
-  oledWake();   // show the dashboard for the first 15 s
+  oledSetOn(true);   // screen starts on; a tap toggles it
   hydrationBegin(BODY_WEIGHT_LB, EXERCISE_OZ);
   iotBegin();
   therm = readThermistor();
@@ -82,9 +84,14 @@ void loop() {
 
   // Light the screen whenever a bottle arrives or leaves
   bool p = isObjectPresent();
-  if (p != prevPresent) { prevPresent = p; oledWake(); }
+  if (p != prevPresent) { prevPresent = p; if (WAKE_ON_BOTTLE) oledSetOn(true); }
 
-  if (readTouch()) oledWake();         // ~33 ms per call; a touch lights the OLED
+  bool touch = readTouch();            // ~33 ms per call, debounced
+  if (touch && !prevTouch) {           // rising edge = one tap
+    oledToggle();
+    lastOled = 0;                      // redraw right away
+  }
+  prevTouch = touch;
   if (Serial.available() && Serial.read() == 'c') capTouchRecalibrate();
   unsigned long now = millis();
 
@@ -112,7 +119,10 @@ void loop() {
     if (!isObjectPresent())   Serial.println("no bottle");
     else if (!scale.valid)    Serial.println("bottle present - settling");
     else { Serial.print("bottle present | "); Serial.print(scale.weightOz, 2);
-           Serial.print(" oz | "); Serial.print(scale.vKalman, 3); Serial.println(" V"); }
+           Serial.print(" oz | "); Serial.print(scale.vKalman, 3); Serial.print(" V");
+           HydrationState hs = hydrationGet();
+           Serial.print(" | stable "); Serial.print(hs.stableCount);
+           Serial.print(hs.haveStable ? " ref " : " no-ref "); Serial.println(hs.lastStableOz, 2); }
   }
 
   if (now - lastDayCheck >= DAY_CHECK_MS) {
