@@ -26,6 +26,10 @@ struct HydrationState {
   float heatIndexF;
   float envMultiplier; // 1.00 = no adjustment
   float lastDrinkOz;   // size of most recent detected drink
+  int   stableCount;   // consecutive stable updates (needs STABLE_CYCLES)
+  bool  haveStable;    // a reference weight has been recorded
+  bool  bottleAway;    // bottle was lifted; waiting for it to come back
+  float lastStableOz;  // reference weight
 };
 
 void  hydrationBegin(float bodyWeightLb, float exerciseOz);
