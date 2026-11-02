@@ -79,8 +79,11 @@ muxBegin();
     Serial.println("BMP280 not found, check wiring!");
   }
 
-  shtOk = sht31.begin(0x44);   // try 0x45 if your board has ADDR pulled high
+  shtOk = sht31.begin(0x44) || sht31.begin(0x45);   // 0x44 default, 0x45 if ADDR pin is high
   if (!shtOk) Serial.println("SHT31 not found, check wiring!");
+
+  Serial.print("I2C sensors -> BMP280: "); Serial.print(bmpOk ? "OK" : "MISSING");
+  Serial.print(" | SHT31: "); Serial.println(shtOk ? "OK" : "MISSING");
 
   if (bmpOk) calibrateThermistorToBMP();
 
@@ -113,9 +116,21 @@ static const float SHT31_SLOPE     = 1.32f;
 static const float SHT31_INTERCEPT = -33.2f;
 
 float readHumidityRH() {
-  if (!shtOk) return NAN;
+  if (!shtOk) {                                   // retry every 5 s in case it was a loose wire
+    static unsigned long lastTry = 0;
+    if (millis() - lastTry > 5000) {
+      lastTry = millis();
+      shtOk = sht31.begin(0x44) || sht31.begin(0x45);
+      if (shtOk) Serial.println("SHT31 found.");
+    }
+    if (!shtOk) return NAN;
+  }
   float raw = sht31.readHumidity();
-  if (isnan(raw)) return NAN;
+  if (isnan(raw)) {
+    static unsigned long lastWarn = 0;
+    if (millis() - lastWarn > 10000) { lastWarn = millis(); Serial.println("SHT31 read returned NaN"); }
+    return NAN;
+  }
 #if SHT31_APPLY_CAL
   float rh = (raw - SHT31_INTERCEPT) / SHT31_SLOPE;
   return constrain(rh, 0.0f, 100.0f);
