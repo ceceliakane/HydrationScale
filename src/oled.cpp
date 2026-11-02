@@ -69,12 +69,10 @@ void oledRender(const HydrationState& h, float tempF, float rh,
   else { display.print(weightOz, 1); display.print(" oz"); }
 
   display.setCursor(0, 52);
-  if (isnan(tempF) || isnan(rh)) {
-    display.print("Env: --");
-  } else {
-    display.print(tempF, 0); display.print("F  ");
-    display.print(rh, 0);    display.print("%RH  x");
-    display.print(h.envMultiplier, 2);
-  }
+  if (isnan(tempF)) display.print("--F  ");
+  else { display.print(tempF, 0); display.print("F  "); }
+  if (isnan(rh)) display.print("--%RH  ");
+  else { display.print(rh, 0); display.print("%RH  "); }
+  display.print("x"); display.print(h.envMultiplier, 2);
   display.display();
 }
