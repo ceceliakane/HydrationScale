@@ -42,8 +42,8 @@ static KalmanFilter weightFilter(0.0001, 0.01, 1.0, 0.0);
 static bool weightFilterPrimed = false;
 
 // ---------- Presence ----------
-static const float DETECT_CM  = 20.0;
-static const float RELEASE_CM = 25.0;
+static const float DETECT_CM  = 5.08;
+static const float RELEASE_CM = 6.35;
 static const uint8_t CONFIRM_COUNT = 3;
 static const unsigned long PING_INTERVAL_MS = 60;
 static const unsigned long ECHO_TIMEOUT_US  = 30000UL;
