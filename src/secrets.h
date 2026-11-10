@@ -1,6 +1,6 @@
 #pragma once
 
-#define SECRET_SSID      "thumbelina"
-#define SECRET_PASS      "helloworld1234"
-#define TS_CHANNEL_ID    3493387UL
-#define TS_WRITE_API_KEY "BQV8M2I4V19LSHL0"
+#define SECRET_SSID      "network name here"
+#define SECRET_PASS      "password here"
+#define TS_CHANNEL_ID    [channel_id]
+#define TS_WRITE_API_KEY "write_api_key"
